@@ -86,13 +86,6 @@
     background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.55),transparent 45%),var(--c);
     box-shadow:0 5px 12px rgba(0,0,0,.18), inset 0 -3px 6px rgba(0,0,0,.12)}
   .nm{flex:1;min-width:0;font-weight:650;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ctl{flex:none;display:flex;align-items:center;gap:6px}
-  .rb{width:34px;height:34px;margin:0;padding:0;border-radius:50%;font-size:22px;font-weight:600;line-height:1;
-    color:var(--c);background:var(--t);border:1px solid rgba(255,255,255,.85);
-    box-shadow:0 3px 8px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.9);
-    display:grid;place-items:center;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-  .rb:active{transform:scale(.88);box-shadow:none}
-  .rb:disabled{opacity:.35}
   .num{min-width:52px;height:38px;padding:0 8px;border-radius:14px;display:grid;place-items:center;
     font-size:21px;font-weight:700;color:var(--c);background:var(--t);
     border:1px solid rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
@@ -101,11 +94,17 @@
   @keyframes pop{50%{transform:scale(1.14)}}
   #status{min-height:18px;margin-top:12px}
   @media(max-width:360px){.nm{font-size:14.5px}.av{width:36px;height:36px;font-size:12px}.num{min-width:44px}}
+  .brand { display: flex; align-items: center; gap: 2px; }
+.coaching-logo { width: 1250px; height: 62px; object-fit: contain;align-self:center;}
 </style>
 </head>
 <body>
 <main class="card">
-  <span class="badge">Momentum</span>
+  
+  <div class="brand">
+  <img class="coaching-logo" src="coaching-logo.svg" alt="Coaching logo">
+  <!-- <span class="badge">Momentum</span> -->
+</div>
   <h1>Lecture entry</h1>
   <p class="sub">One entry per video lecture. Fill the details and tap Continue to submit.</p>
 
@@ -214,6 +213,9 @@
   });
 
   // ---------- Videos to arrange (shared counts) ----------
+  // Use this Apps Script deployment URL while running this page from VS Code.
+  // After saving Code.gs, deploy a new version at the same /exec URL.
+  var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpbyEiDMjj1JyDqlG6EM71qoa8r0r46Vj-2x7lEh12PFfM3WoYn6wIxZwp_grewrBY/exec";
   var BOARD = [
     {n:"Vikas Sir",   i:"VS",c:"#e0309a",t:"rgba(240,80,170,.15)"},
     {n:"Sudhanshu Sir",i:"SS",c:"#2b8cf0",t:"rgba(43,140,240,.15)"},
@@ -233,12 +235,13 @@
   ];
   var DEMO = [0,0,13,0,0,0,13,1,0,2,0,1,0,0,0]; // demo counts for local testing
   var onServer = !!(window.google && google.script && google.script.run);
+  var LOCAL_COUNTS_KEY = "momentumTeacherCounts.v1";
   var counts = {}, pending = {}, inflight = {}, timers = {};
+  var remoteLoadInProgress = false;
 
   function paint(i, pop){
     var el=$("n-"+i), v=counts[BOARD[i].n];
     el.textContent = (v===undefined) ? "\u2013" : v;
-    $("m-"+i).disabled = !v;
     if(pop){ el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
   }
   function paintAll(){ BOARD.forEach(function(_,i){ paint(i); }); }
@@ -249,14 +252,8 @@
       var r=document.createElement("div");
       r.className="trow"; r.style.setProperty("--c",t.c); r.style.setProperty("--t",t.t);
       r.innerHTML='<div class="av">'+t.i+'</div><div class="nm">'+t.n+'</div>'+
-        '<div class="ctl"><button type="button" class="rb" id="m-'+i+'" data-i="'+i+'" data-d="-1" aria-label="One less video for '+t.n+'">&minus;</button>'+
-        '<div class="num" id="n-'+i+'" aria-live="polite">\u2013</div>'+
-        '<button type="button" class="rb" data-i="'+i+'" data-d="1" aria-label="One more video for '+t.n+'">+</button></div>';
+        '<div class="num" id="n-'+i+'" aria-live="polite">\u2013</div>';
       box.appendChild(r);
-    });
-    box.addEventListener("click",function(e){
-      var b=e.target.closest(".rb"); if(!b) return;
-      change(+b.dataset.i, +b.dataset.d);
     });
   })();
 
@@ -265,9 +262,58 @@
   }
   function status(msg){ $("status").textContent=msg||""; }
 
+  function saveLocalCounts(){
+    try{
+      localStorage.setItem(LOCAL_COUNTS_KEY,JSON.stringify(counts));
+      return true;
+    }catch(e){
+      status("Could not save counts in this browser.");
+      return false;
+    }
+  }
+
+  function loadRemoteCounts(){
+    if(remoteLoadInProgress) return;
+    remoteLoadInProgress=true;
+    var callbackName="__momentumCounts_"+Date.now()+"_"+Math.floor(Math.random()*1000000);
+    var script=document.createElement("script");
+    var finished=false;
+    function finish(){
+      if(finished) return;
+      finished=true;
+      remoteLoadInProgress=false;
+      if(script.parentNode) script.parentNode.removeChild(script);
+      try{ delete window[callbackName]; }catch(e){ window[callbackName]=undefined; }
+    }
+    window[callbackName]=function(result){
+      finish();
+      if(result && result.ok && result.data){
+        counts=result.data;
+        paintAll();
+        status("Video counts loaded from Google Sheet Do not spam on Submission.");
+
+      }else{
+        status("Could not load counts from the Google Sheet.");
+      }
+    };
+    script.onerror=function(){ finish(); status("Could not reach the Google Sheet service."); };
+    script.src=APPS_SCRIPT_URL+"?action=getCounts&callback="+encodeURIComponent(callbackName)+"&t="+Date.now();
+    document.head.appendChild(script);
+  }
+
   function load(){
     if(busy()) return;
-    if(!onServer){ BOARD.forEach(function(t,i){ if(counts[t.n]===undefined) counts[t.n]=DEMO[i]; }); paintAll(); return; }
+    if(!onServer){
+      if(APPS_SCRIPT_URL){ loadRemoteCounts(); return; }
+      var saved={};
+      try{ saved=JSON.parse(localStorage.getItem(LOCAL_COUNTS_KEY)||"{}"); }catch(e){}
+      BOARD.forEach(function(t,i){
+        var value=saved[t.n];
+        counts[t.n]=(typeof value==="number" && Number.isFinite(value) && value>=0) ? value : DEMO[i];
+      });
+      if(!saveLocalCounts()) return;
+      paintAll(); status("Saved in this browser"); return;
+    }
     google.script.run.withSuccessHandler(function(data){
       if(busy()) return;
       counts=data; paintAll(); status("");
@@ -288,9 +334,27 @@
 
   function flush(name,i){
     var d=pending[name]||0; pending[name]=0;
-    if(!d || !onServer) return;
+    if(!d) return;
+    if(!onServer && !APPS_SCRIPT_URL){ if(saveLocalCounts()) status("Saved in this browser"); return; }
     inflight[name]=(inflight[name]||0)+1;
-    status("Saving\u2026");
+    status(onServer ? "Saving\u2026" : "Saving to Google Sheet\u2026");
+    if(!onServer){
+      var body=new URLSearchParams();
+      body.set("action","changeCount"); body.set("teacher",name); body.set("delta",String(d));
+      fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",body:body})
+        .then(function(){
+          inflight[name]--;
+          if(!pending[name] && !inflight[name]){
+            status("Saved to Google Sheet");
+            setTimeout(load,900);
+          }
+        }).catch(function(){
+          inflight[name]--;
+          status("Could not save to Google Sheet. Check your connection.");
+          setTimeout(load,1500);
+        });
+      return;
+    }
     google.script.run.withSuccessHandler(function(v){
       inflight[name]--;
       if(!pending[name] && !inflight[name]){ counts[name]=v; paint(i); }
