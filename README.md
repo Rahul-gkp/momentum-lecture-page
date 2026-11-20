@@ -2,7 +2,7 @@
 
 A mobile-friendly, liquid-glass style web app (Google Apps Script) for Momentum teachers.
 
-- **Lecture entry**: teacher, subject, lecture name, topic and date are sent straight to the Google Form, then a "Thank you" screen appears.
+- **Lecture entry**: teacher, subject, batch name, lecture name, topic and date are sent straight to the Google Form, then a "Thank you" screen appears.
 - **Videos to Arrange**: shared per-teacher counts saved in the Google Sheet `Teacher Counts`. Counts decrease when a lecture is submitted; manual changes are made directly in the sheet.
 
 ## Files
