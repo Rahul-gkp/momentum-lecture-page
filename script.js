@@ -19,6 +19,7 @@ var FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfzabq7Ah7sGN_v6ApSO7OK
     themeLabel.textContent=isDark?"Night mode":"Day mode";
     document.documentElement.style.colorScheme=isDark?"dark":"light";
     if(save){try{localStorage.setItem(THEME_KEY,isDark?"dark":"light");}catch(e){}}
+    if(typeof applyManifestThemeColors==="function") applyManifestThemeColors();
   }
   var savedTheme="light"; try{savedTheme=localStorage.getItem(THEME_KEY)||"light";}catch(e){}
   setTheme(savedTheme==="dark",false);
@@ -283,3 +284,170 @@ var FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfzabq7Ah7sGN_v6ApSO7OK
   load();
   setInterval(load,20000);
   document.addEventListener("visibilitychange",function(){ if(!document.hidden) load(); });
+
+  // ---------- Remote Manifest Loader (app-update.json) ----------
+  var CURRENT_APP_VERSION_CODE = 1; // Increment when building a new APK
+  var MANIFEST_URL = "./app-update.json"; // Or set to https://raw.githubusercontent.com/YOUR_USERNAME/GOGLE-FORM/main/app-update.json
+  var manifestThemeColors = null;
+
+  function applyManifestThemeColors() {
+    if (!manifestThemeColors) return;
+    var isDark = document.body.classList.contains("theme-dark");
+    var palette = isDark ? manifestThemeColors.dark : manifestThemeColors.light;
+    if (!palette) return;
+    var target = isDark ? document.body.style : document.documentElement.style;
+    if (palette.ink) target.setProperty("--ink", palette.ink);
+    if (palette.muted) target.setProperty("--muted", palette.muted);
+    if (palette.accent) target.setProperty("--accent", palette.accent);
+    if (palette.accent2) target.setProperty("--accent2", palette.accent2);
+    if (palette.background) target.setProperty("--bg", palette.background);
+  }
+
+  function applyManifest(cfg) {
+    if (!cfg || typeof cfg !== "object") return;
+
+    // 1. App Name
+    if (cfg.app_name) {
+      document.title = cfg.app_name;
+    }
+
+    // 2. Version & APK Update Check
+    var updBanner = $("updateBanner");
+    if (updBanner && cfg.version && cfg.version.latest_version_code > CURRENT_APP_VERSION_CODE) {
+      $("updateTitle").textContent = "Update Available (" + (cfg.version.latest_version_name || "New") + ")";
+      $("updateMessage").textContent = cfg.version.release_notes || "A newer version of the app is available.";
+      var updLink = $("updateLink");
+      if (cfg.version.update_url) {
+        updLink.href = cfg.version.update_url;
+        updLink.hidden = false;
+      } else {
+        updLink.hidden = true;
+      }
+      var updClose = $("updateClose");
+      updClose.hidden = !!cfg.version.force_update;
+      updClose.onclick = function () { updBanner.hidden = true; };
+      updBanner.hidden = false;
+    }
+
+    // 3. Google Form & Apps Script URLs
+    if (cfg.apps_script_url) APPS_SCRIPT_URL = cfg.apps_script_url;
+    if (cfg.google_form) {
+      if (cfg.google_form.form_url) FORM_URL = cfg.google_form.form_url;
+      if (cfg.google_form.fields) Object.assign(FIELD, cfg.google_form.fields);
+    }
+
+    // 4. Theme Colors (light & dark)
+    if (cfg.theme_colors) {
+      manifestThemeColors = cfg.theme_colors;
+      applyManifestThemeColors();
+    }
+
+    // 5. Maintenance Mode
+    var maintOverlay = $("maintenanceOverlay");
+    if (maintOverlay && cfg.maintenance_mode) {
+      if (cfg.maintenance_mode.enabled) {
+        if (cfg.maintenance_mode.title) $("maintenanceTitle").textContent = cfg.maintenance_mode.title;
+        if (cfg.maintenance_mode.message) $("maintenanceMessage").textContent = cfg.maintenance_mode.message;
+        maintOverlay.hidden = false;
+      } else {
+        maintOverlay.hidden = true;
+      }
+    }
+
+    // 6. Announcement Banner (handles empty action_url gracefully)
+    var annBanner = $("announcementBanner");
+    if (annBanner && cfg.announcement) {
+      var ann = cfg.announcement;
+      var dismissedId = "";
+      try { dismissedId = localStorage.getItem("momentumDismissedAnn") || ""; } catch (e) {}
+      if (ann.enabled && (!ann.dismissible || dismissedId !== ann.id)) {
+        $("announcementTitle").textContent = ann.title || "";
+        $("announcementMessage").textContent = ann.message || "";
+        var linkEl = $("announcementLink");
+        var closeBtn = $("announcementClose");
+
+        function dismissAnnouncement() {
+          annBanner.hidden = true;
+          if (ann.id) {
+            try { localStorage.setItem("momentumDismissedAnn", ann.id); } catch (e) {}
+          }
+        }
+
+        if (ann.action_url && ann.action_url.trim() !== "") {
+          linkEl.href = ann.action_url;
+          linkEl.textContent = ann.action_text || "Open";
+          linkEl.hidden = false;
+        } else if (ann.action_text && ann.dismissible !== false) {
+          // If action_url is empty (like "Got it"), let the action button dismiss the notice
+          linkEl.href = "#";
+          linkEl.textContent = ann.action_text;
+          linkEl.hidden = false;
+          linkEl.onclick = function (e) { e.preventDefault(); dismissAnnouncement(); };
+        } else {
+          linkEl.hidden = true;
+        }
+
+        closeBtn.hidden = ann.dismissible === false;
+        closeBtn.onclick = dismissAnnouncement;
+        annBanner.hidden = false;
+      } else {
+        annBanner.hidden = true;
+      }
+    }
+
+    // 7. Menu Configuration (id, page, title, icon, visible)
+    if (Array.isArray(cfg.menu)) {
+      var nav = document.querySelector(".bottom-nav");
+      var visibleItems = [];
+      cfg.menu.forEach(function (item) {
+        var inputEl = $(item.id);
+        var labelEl = nav ? nav.querySelector('label[for="' + item.id + '"]') : null;
+        if (!inputEl || !labelEl) return;
+        if (item.visible === false) {
+          inputEl.disabled = true;
+          labelEl.style.display = "none";
+        } else {
+          inputEl.disabled = false;
+          labelEl.style.display = "flex";
+          visibleItems.push(item);
+          var iconSpan = labelEl.querySelector(".nav-icon");
+          var textSpan = labelEl.querySelector("span:last-child");
+          if (iconSpan && item.icon) iconSpan.textContent = item.icon;
+          if (textSpan && item.title) textSpan.textContent = item.title;
+          if (item.page) {
+            inputEl.onchange = function () { if (this.checked) showPage(item.page); };
+          }
+        }
+      });
+      if (nav && visibleItems.length > 0) {
+        nav.style.gridTemplateColumns = "repeat(" + visibleItems.length + ", 1fr)";
+        var selector = nav.querySelector(".nav-selector");
+        if (selector) {
+          selector.style.width = "calc(" + (100 / visibleItems.length) + "% - 7px)";
+          if (visibleItems.length === 1) {
+            selector.style.transform = "translateX(0)";
+            var onlyInput = $(visibleItems[0].id);
+            if (onlyInput) {
+              onlyInput.checked = true;
+              if (visibleItems[0].page) showPage(visibleItems[0].page);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function loadManifest() {
+    if (!MANIFEST_URL) return;
+    fetch(MANIFEST_URL + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        if (data) {
+          applyManifest(data);
+          load();
+        }
+      })
+      .catch(function () { /* Offline fallback to built-in defaults */ });
+  }
+
+  loadManifest();

@@ -8,6 +8,36 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="maintenance-overlay" id="maintenanceOverlay" hidden>
+  <div class="maintenance-card">
+    <div class="maintenance-icon" aria-hidden="true">🛠️</div>
+    <h2 id="maintenanceTitle">Scheduled Maintenance</h2>
+    <p id="maintenanceMessage">Momentum Lecture Entry is currently undergoing scheduled maintenance. Please try again shortly.</p>
+  </div>
+</div>
+
+<div class="announcement-banner" id="updateBanner" hidden>
+  <div class="announcement-body">
+    <strong class="announcement-title" id="updateTitle">App Update Available</strong>
+    <p class="announcement-message" id="updateMessage"></p>
+  </div>
+  <div class="announcement-actions">
+    <a class="announcement-link" id="updateLink" href="#" target="_blank" rel="noopener">Update</a>
+    <button type="button" class="announcement-close" id="updateClose" aria-label="Dismiss update">✕</button>
+  </div>
+</div>
+
+<div class="announcement-banner" id="announcementBanner" hidden>
+  <div class="announcement-body">
+    <strong class="announcement-title" id="announcementTitle"></strong>
+    <p class="announcement-message" id="announcementMessage"></p>
+  </div>
+  <div class="announcement-actions">
+    <a class="announcement-link" id="announcementLink" href="#" target="_blank" rel="noopener" hidden></a>
+    <button type="button" class="announcement-close" id="announcementClose" aria-label="Dismiss announcement">✕</button>
+  </div>
+</div>
+
 <main class="card page-view is-active" id="lecturePage">
   
   <div class="brand">

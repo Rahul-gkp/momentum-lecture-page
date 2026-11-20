@@ -1,0 +1,68 @@
+{
+  "app_name": "Momentum Lecture Entry",
+  "version": {
+    "latest_version_code": 2,
+    "latest_version_name": "1.1.0",
+    "force_update": false,
+    "update_url": "https://github.com/YOUR_USERNAME/GOGLE-FORM/releases/latest/download/momentum-lecture-entry.apk",
+    "release_notes": "Added remote manifest configuration, announcement banner, and maintenance mode support."
+  },
+  "website_url": "https://YOUR_USERNAME.github.io/GOGLE-FORM/",
+  "apps_script_url": "https://script.google.com/macros/s/AKfycbxpbyEiDMjj1JyDqlG6EM71qoa8r0r46Vj-2x7lEh12PFfM3WoYn6wIxZwp_grewrBY/exec",
+  "google_form": {
+    "form_url": "https://docs.google.com/forms/d/e/1FAIpQLSfzabq7Ah7sGN_v6ApSO7OKG5rUKJwgjtHIf_9dXdfYgJ0iFQ/formResponse",
+    "fields": {
+      "teacher": "entry.553631712",
+      "topic": "entry.1738076249",
+      "batch": "entry.601322218",
+      "lecture": "entry.2007937138",
+      "date": "entry.319678299"
+    }
+  },
+  "maintenance_mode": {
+    "enabled": false,
+    "title": "Scheduled Maintenance",
+    "message": "Momentum Lecture Entry is currently undergoing scheduled maintenance. Please try again shortly."
+  },
+  "announcement": {
+    "enabled": true,
+    "id": "ann_2026_01",
+    "title": "Notice for Teachers",
+    "message": "Video counts are synced directly with the Google Sheet. Please avoid spamming the Continue button on submission.",
+    "action_text": "Got it",
+    "action_url": "",
+    "dismissible": true
+  },
+  "theme_colors": {
+    "light": {
+      "ink": "#10201a",
+      "muted": "#5b6b64",
+      "accent": "#1f9d55",
+      "accent2": "#16804a",
+      "background": "#eef4f1"
+    },
+    "dark": {
+      "ink": "#e1efe6",
+      "muted": "#a6b8ac",
+      "accent": "#43c779",
+      "accent2": "#69dc95",
+      "background": "#0b1510"
+    }
+  },
+  "menu": [
+    {
+      "id": "nav-lecture",
+      "page": "lecture",
+      "title": "Lecture Entry",
+      "icon": "\u270e",
+      "visible": true
+    },
+    {
+      "id": "nav-videos",
+      "page": "videos",
+      "title": "Videos to Arrange",
+      "icon": "\u25a4",
+      "visible": true
+    }
+  ]
+}
