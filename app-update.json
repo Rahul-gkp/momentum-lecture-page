@@ -1,12 +1,4 @@
-{
-  "app_name": "Momentum Lecture Entry",
-  "version": {
-    "latest_version_code": 2,
-    "latest_version_name": "1.1.0",
-    "force_update": false,
-    "update_url": "https://github.com/Rahul-gkp/momentum-lecture-page",
-    "release_notes": "TEST"
-  },
+
   "website_url": "https://github.com/Rahul-gkp/momentum-lecture-page",
   "apps_script_url": "https://script.google.com/macros/s/AKfycbxpbyEiDMjj1JyDqlG6EM71qoa8r0r46Vj-2x7lEh12PFfM3WoYn6wIxZwp_grewrBY/exec",
   "google_form": {
