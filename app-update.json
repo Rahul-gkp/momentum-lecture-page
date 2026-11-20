@@ -4,10 +4,10 @@
     "latest_version_code": 2,
     "latest_version_name": "1.1.0",
     "force_update": false,
-    "update_url": "https://github.com/YOUR_USERNAME/GOGLE-FORM/releases/latest/download/momentum-lecture-entry.apk",
-    "release_notes": "Added remote manifest configuration, announcement banner, and maintenance mode support."
+    "update_url": "https://github.com/Rahul-gkp/momentum-lecture-page",
+    "release_notes": "TEST"
   },
-  "website_url": "https://YOUR_USERNAME.github.io/GOGLE-FORM/",
+  "website_url": "https://github.com/Rahul-gkp/momentum-lecture-page",
   "apps_script_url": "https://script.google.com/macros/s/AKfycbxpbyEiDMjj1JyDqlG6EM71qoa8r0r46Vj-2x7lEh12PFfM3WoYn6wIxZwp_grewrBY/exec",
   "google_form": {
     "form_url": "https://docs.google.com/forms/d/e/1FAIpQLSfzabq7Ah7sGN_v6ApSO7OKG5rUKJwgjtHIf_9dXdfYgJ0iFQ/formResponse",
